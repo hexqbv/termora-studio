@@ -3,10 +3,12 @@ import { TerminalWindow } from '../terminal/TerminalWindow';
 import {
   SelectRenderer,
   InputRenderer,
+  NumberRenderer,
   MultiSelectRenderer,
   ConfirmRenderer,
   PasswordRenderer,
   AutocompleteRenderer,
+  DividerRenderer,
   BannerRenderer,
   ColorsRenderer
 } from '../terminal/PromptRenderer';
@@ -26,6 +28,8 @@ export function PlaygroundPreview({
         return <SelectRenderer key={JSON.stringify(config)} config={config} />;
       case 'input':
         return <InputRenderer key={JSON.stringify(config)} config={config} />;
+      case 'number':
+        return <NumberRenderer key={JSON.stringify(config)} config={config} />;
       case 'multiselect':
         return <MultiSelectRenderer key={JSON.stringify(config)} config={config} />;
       case 'confirm':
@@ -40,6 +44,8 @@ export function PlaygroundPreview({
         return <ProgressBarRenderer key={JSON.stringify(config)} config={config} />;
       case 'box':
         return <BoxRenderer key={JSON.stringify(config)} config={config} />;
+      case 'divider':
+        return <DividerRenderer key={JSON.stringify(config)} config={config} />;
       case 'banner':
         return <BannerRenderer key={JSON.stringify(config)} config={config} />;
       case 'table':
@@ -51,6 +57,8 @@ export function PlaygroundPreview({
     }
   };
 
+  const isVerified = component.status === 'verified';
+
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto">
       {/* Component Header Bar */}
@@ -58,8 +66,12 @@ export function PlaygroundPreview({
         <div>
           <div className="flex items-center gap-2.5">
             <h2 className="text-lg font-bold text-white font-mono">{component.name}</h2>
-            <Badge variant="verified">VERIFIED API</Badge>
-            <span className="text-xs font-mono text-slate-500 uppercase">termora/{component.id}</span>
+            <Badge variant={isVerified ? 'verified' : 'planned'}>
+              {isVerified ? 'VERIFIED PACKAGE API' : 'SIMULATED / PLANNED EXTENSION'}
+            </Badge>
+            <span className="text-xs font-mono text-slate-500 uppercase">
+              {component.packageExport || `termkit-ui/${component.id}`}
+            </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">{component.description}</p>
         </div>
@@ -67,10 +79,10 @@ export function PlaygroundPreview({
 
       {/* Terminal Viewport */}
       <TerminalWindow
-        title={`termora — preview: ${component.id} — 80x24`}
+        title={`termkit-ui — preview: ${component.id} — 80x24`}
         onReset={onReset}
         className="w-full min-h-[300px] flex-1"
-        statusText={`Previewing ${component.name} primitive`}
+        statusText={isVerified ? `Previewing verified termkit-ui primitive` : `Previewing simulated UI extension`}
       >
         <div className="py-2">
           {renderInteractiveComponent()}

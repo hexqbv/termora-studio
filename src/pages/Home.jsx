@@ -16,44 +16,48 @@ import {
   Table,
   Box,
   Compass,
-  Zap
+  Zap,
+  SplitSquareVertical
 } from 'lucide-react';
 import { COMPONENTS } from '../data/components';
 
 export function Home({ setActivePage, onOpenComponentInPlayground }) {
   const [copiedInstall, setCopiedInstall] = useState(false);
-  const [activeCodeTab, setActiveCodeTab] = useState('esm');
 
   const handleCopyInstall = () => {
-    navigator.clipboard.writeText('npm install termora');
+    navigator.clipboard.writeText('npm install termkit-ui');
     setCopiedInstall(true);
     setTimeout(() => setCopiedInstall(false), 2000);
   };
 
-  const heroCodeSnippet = `import { select, spinner, box, colors } from "termora";
+  const heroCodeSnippet = `import { select } from "termkit-ui/prompts";
+import { spinner } from "termkit-ui/progress";
+import { box } from "termkit-ui/layout";
+import { colors } from "termkit-ui/styles";
+import { defaultCoordinator } from "termkit-ui";
 
-console.log(box({
-  title: "Cloud Engine CLI",
-  content: "Provisioning microservice architecture...",
-  borderColor: "cyan"
-}));
+console.log(box(
+  "Provisioning microservice architecture on cluster...",
+  { title: "Cloud Engine CLI", borderColor: "cyan", borderStyle: "rounded" }
+));
 
-// 1. Prompt developer for target
+// 1. Prompt developer with verified items schema
 const targetEnv = await select({
   message: "Choose your deployment cluster:",
-  options: [
-    { label: "Production (us-east-1)", value: "prod-us" },
+  items: [
+    { label: "Production (us-east-1)", value: "prod-us", hint: "Live Anycast" },
     { label: "Staging (eu-central-1)", value: "staging-eu" },
     { label: "Local Kubernetes (minikube)", value: "local" }
   ]
 });
 
-// 2. Animate task execution
+// 2. Animate task execution with concurrent-safe logging
 const loader = spinner({
-  text: \`Deploying containers to \${targetEnv}...\`,
+  message: \`Deploying containers to \${targetEnv}...\`,
   color: "cyan"
 }).start();
 
+defaultCoordinator.log("Worker connected: pod/api-service-7f49");
 await deployCluster(targetEnv);
 loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
 
@@ -65,9 +69,11 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
           {/* Release Pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-dark-900 border border-dark-750 text-xs font-mono text-slate-300">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span>Open Source JavaScript CLI Toolkit</span>
+            <span>termkit-ui v0.1.0</span>
             <span className="text-slate-600">|</span>
-            <span className="text-cyan-400">Node.js 18+</span>
+            <span className="text-cyan-400">Node.js &gt;= 22.0.0</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-emerald-400 font-semibold">Zero Dependencies</span>
           </div>
 
           {/* Headline */}
@@ -80,7 +86,7 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
 
           {/* Supporting text */}
           <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto">
-            Build interactive command-line applications with reusable prompts, progress indicators, layouts, and terminal components. No ANSI boilerplate required.
+            Build interactive command-line applications with reusable prompts, progress indicators, layouts, and terminal components on a shared virtual screen renderer.
           </p>
 
           {/* CTAs */}
@@ -112,7 +118,7 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
               className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-dark-900 border border-dark-750 hover:border-cyan-500/40 cursor-pointer text-xs font-mono text-slate-300 transition-all shadow-md group"
             >
               <span className="text-cyan-400 font-bold">$</span>
-              <span>npm install termora</span>
+              <span>npm install termkit-ui</span>
               {copiedInstall ? (
                 <span className="flex items-center gap-1 text-emerald-400 font-sans">
                   <Check className="w-3.5 h-3.5" /> Copied!
@@ -136,13 +142,13 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-cyan-400 font-mono">
-            Core Primitives
+            Verified Primitives
           </h2>
           <p className="text-2xl sm:text-3xl font-extrabold text-white">
             Everything your CLI tool needs
           </p>
           <p className="text-sm text-slate-400">
-            Engineered from first principles with zero bloated dependencies.
+            Engineered from first principles with zero runtime dependencies.
           </p>
         </div>
 
@@ -157,12 +163,12 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
                 Interactive Prompts
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Single select, multi-select checkboxes, freeform text, masked password inputs, and autocomplete with real-time arrow key navigation.
+                Single select, multi-select checkboxes, number inputs with arrow stepping, freeform text, and masked password inputs.
               </p>
             </div>
             <div className="p-3 rounded-lg bg-dark-950 border border-dark-850 font-mono text-xs text-slate-300">
               <div className="text-emerald-400 font-bold">? Select region:</div>
-              <div className="text-cyan-400 pl-3">❯ US East (Virginia)</div>
+              <div className="text-cyan-400 pl-3">❯ US East (Virginia) <span className="text-slate-500 text-[10px]">Default</span></div>
               <div className="text-slate-500 pl-3">  EU West (Frankfurt)</div>
             </div>
             <button
@@ -184,7 +190,7 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
                 Spinners & Gauges
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Silky-smooth terminal loading spinners and deterministic progress bars with automatic cursor hiding to prevent terminal flicker.
+                Smooth terminal loading spinners and progress bars with concurrent log coordination and automatic accessible milestone mode in CI.
               </p>
             </div>
             <div className="p-3 rounded-lg bg-dark-950 border border-dark-850 font-mono text-xs text-slate-300 space-y-1.5">
@@ -193,7 +199,7 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
                 <span>Optimizing chunks...</span>
               </div>
               <div className="text-emerald-400">
-                [████████████░░░░] 75%
+                [████████████░░░░] 75% (ETA: 4s)
               </div>
             </div>
             <button
@@ -212,15 +218,15 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
-                Boxes & Tables
+                Boxes, Dividers & Tables
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Clean box panels with UTF-8 border glyphs (round, double, single) and formatted ANSI tables with column width calculations.
+                Unicode border panels (rounded, double, single, bold, ascii), horizontal dividers, and formatted ANSI tables without CJK/emoji border tearing.
               </p>
             </div>
             <div className="p-3 rounded-lg bg-dark-950 border border-dark-850 font-mono text-[11px] text-cyan-400 whitespace-pre">
-{`╭─ Termora v1.0 ─╮
-│ Port: 3000     │
+{`╭─ TermKit UI ───╮
+│ Status: READY  │
 ╰────────────────╯`}
             </div>
             <button
@@ -243,20 +249,20 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
               Intuitive, async-first API design
             </h2>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Every Termora prompt returns a native standard JavaScript <code className="text-cyan-300 bg-dark-800 px-1 py-0.5 rounded font-mono">Promise</code> that resolves directly to the user's choice. No complex event listener chains or callback hell.
+              Every prompt returns a native standard JavaScript <code className="text-cyan-300 bg-dark-800 px-1 py-0.5 rounded font-mono">Promise</code> that resolves directly to the user's choice. Prompts and spinners route to <code className="text-slate-300">stderr</code> by default so your <code className="text-slate-300">stdout</code> pipeline stays clean.
             </p>
             <ul className="space-y-3 text-xs text-slate-300 font-mono">
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span>Standard async/await syntax</span>
+                <span>Zero runtime dependencies</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span>Raw mode TTY management under the hood</span>
+                <span>Fail-safe TerminalGuard restoration on exit / Ctrl+C</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span>Automatic cursor cleanup on exit</span>
+                <span>Built-in createTestTerminal() for headless testing</span>
               </li>
             </ul>
             <div className="pt-2">
@@ -280,11 +286,11 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
         </div>
       </section>
 
-      {/* Why Termora / Comparison Section */}
+      {/* Why TermKit / Comparison Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-8 sm:p-10 rounded-2xl bg-dark-900 border border-dark-800 space-y-8">
           <div className="max-w-2xl">
-            <Badge variant="green">WHY TERMORA</Badge>
+            <Badge variant="green">WHY TERMKIT UI</Badge>
             <h3 className="text-2xl font-bold text-white mt-2">
               Replace fragmented CLI dependencies with one cohesive engine
             </h3>
@@ -297,30 +303,30 @@ loader.succeed(colors.green("✓ Deployment completed successfully!"));`;
             <div className="space-y-2 p-4 rounded-xl bg-dark-950 border border-dark-850">
               <div className="font-bold text-slate-200 flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-cyan-400" />
-                <span>Zero Bloated Dependencies</span>
+                <span>Zero Runtime Dependencies</span>
               </div>
               <p className="text-slate-400 leading-relaxed">
-                Built directly on top of Node.js core modules (<code className="text-slate-300">readline</code>, <code className="text-slate-300">tty</code>, <code className="text-slate-300">process</code>). Minimizes install size and vulnerability surface.
+                Built directly on Node.js core streams and <code className="text-slate-300">Intl.Segmenter</code>. Zero native compilation, sub-millisecond startup, and minimal vulnerability surface.
               </p>
             </div>
 
             <div className="space-y-2 p-4 rounded-xl bg-dark-950 border border-dark-850">
               <div className="font-bold text-slate-200 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>CI/CD Safe Fallbacks</span>
+                <span>TerminalGuard & Signal Safety</span>
               </div>
               <p className="text-slate-400 leading-relaxed">
-                Detects non-interactive environments like GitHub Actions and dumb terminals. Returns configured default values without freezing your pipeline.
+                Guarantees terminal raw mode and cursor restoration on exit, normal completion, cancellation, and unhandled exceptions.
               </p>
             </div>
 
             <div className="space-y-2 p-4 rounded-xl bg-dark-950 border border-dark-850">
               <div className="font-bold text-slate-200 flex items-center gap-2">
                 <Layers className="w-4 h-4 text-amber-400" />
-                <span>Dual ESM & CJS Builds</span>
+                <span>OutputCoordinator Log Safety</span>
               </div>
               <p className="text-slate-400 leading-relaxed">
-                Ship to any Node project seamlessly. Import with modern <code className="text-slate-300">import</code> syntax or require in legacy CommonJS toolchains without transpilation friction.
+                Asynchronous worker logs write cleanly above active live regions without tearing running spinners or interactive prompts.
               </p>
             </div>
           </div>

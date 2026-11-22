@@ -1,38 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Check, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
 
 export function SelectRenderer({ config }) {
   const {
     message = 'Choose an option',
-    options = [],
-    pointer = '❯',
+    items = config.options || [],
+    default: defaultValue,
     loop = true
   } = config;
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(() => {
+    if (defaultValue !== undefined) {
+      const idx = items.findIndex(i => i.value === defaultValue);
+      if (idx !== -1) return idx;
+    }
+    return 0;
+  });
   const [submittedValue, setSubmittedValue] = useState(null);
 
-  // Keyboard navigation support
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (submittedValue !== null) return;
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % options.length);
+        setSelectedIndex((prev) => (prev + 1) % items.length);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + options.length) % options.length);
+        setSelectedIndex((prev) => (prev - 1 + items.length) % items.length);
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        if (options[selectedIndex]) {
-          setSubmittedValue(options[selectedIndex].label || options[selectedIndex].value);
+        if (items[selectedIndex]) {
+          setSubmittedValue(items[selectedIndex].label || items[selectedIndex].value);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [options, selectedIndex, submittedValue]);
+  }, [items, selectedIndex, submittedValue]);
 
   if (submittedValue !== null) {
     return (
@@ -56,16 +61,14 @@ export function SelectRenderer({ config }) {
 
   return (
     <div className="font-mono text-sm space-y-3">
-      {/* Question prompt */}
       <div className="flex items-center gap-2">
-        <span className="text-emerald-400 font-bold">?</span>
+        <span className="text-cyan-400 font-bold">?</span>
         <span className="text-slate-200 font-medium">{message}</span>
         <span className="text-xs text-slate-500">(Use arrow keys or click)</span>
       </div>
 
-      {/* Options list */}
       <div className="space-y-1 pl-4">
-        {options.map((opt, idx) => {
+        {items.map((opt, idx) => {
           const isSelected = selectedIndex === idx;
           return (
             <div
@@ -75,23 +78,30 @@ export function SelectRenderer({ config }) {
                 setSubmittedValue(opt.label || opt.value);
               }}
               onMouseEnter={() => setSelectedIndex(idx)}
-              className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer transition-colors ${
+              className={`flex items-center justify-between py-1 px-2 rounded cursor-pointer transition-colors ${
                 isSelected
                   ? 'text-cyan-300 bg-cyan-950/40 font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <span className={`w-3 text-center ${isSelected ? 'text-cyan-400 font-bold' : 'opacity-0'}`}>
-                {pointer}
-              </span>
-              <span>{opt.label || opt.value}</span>
+              <div className="flex items-center gap-2">
+                <span className={`w-3 text-center ${isSelected ? 'text-cyan-400 font-bold' : 'opacity-0'}`}>
+                  ❯
+                </span>
+                <span>{opt.label || opt.value}</span>
+              </div>
+              {opt.hint && (
+                <span className="text-xs text-slate-500 font-mono italic">
+                  {opt.hint}
+                </span>
+              )}
             </div>
           );
         })}
       </div>
 
       <div className="text-[11px] text-slate-500 pt-2 border-t border-dark-800">
-        Press <kbd className="px-1 py-0.5 rounded bg-dark-800 border border-dark-700 text-slate-300">Enter</kbd> to confirm selection
+        Press <kbd className="px-1 py-0.5 rounded bg-dark-800 border border-dark-700 text-slate-300">Enter</kbd> to confirm
       </div>
     </div>
   );
@@ -113,10 +123,6 @@ export function InputRenderer({ config }) {
     if (e.key === 'Enter') {
       if (validate === 'required' && !value.trim()) {
         setError('Value cannot be empty');
-        return;
-      }
-      if (validate === 'numeric' && isNaN(Number(value))) {
-        setError('Value must be a valid number');
         return;
       }
       setError(null);
@@ -145,7 +151,7 @@ export function InputRenderer({ config }) {
   return (
     <div className="font-mono text-sm space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-emerald-400 font-bold">?</span>
+        <span className="text-cyan-400 font-bold">?</span>
         <span className="text-slate-200 font-medium">{message}</span>
         {defaultValue && (
           <span className="text-slate-500 text-xs">({defaultValue})</span>
@@ -182,16 +188,105 @@ export function InputRenderer({ config }) {
   );
 }
 
+export function NumberRenderer({ config }) {
+  const {
+    message = 'Port number',
+    default: defVal = 3000,
+    min = 0,
+    max = 65535,
+    step = 1
+  } = config;
+
+  const [val, setVal] = useState(defVal);
+  const [submitted, setSubmitted] = useState(false);
+
+  const increment = () => setVal(prev => Math.min(max, prev + step));
+  const decrement = () => setVal(prev => Math.max(min, prev - step));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (submitted) return;
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        increment();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        decrement();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        setSubmitted(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [submitted, min, max, step]);
+
+  if (submitted) {
+    return (
+      <div className="font-mono text-sm space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-emerald-400 font-bold">✔</span>
+          <span className="text-slate-300 font-medium">{message}:</span>
+          <span className="text-cyan-400 font-semibold">{val}</span>
+        </div>
+        <button
+          onClick={() => setSubmitted(false)}
+          className="text-xs text-slate-500 hover:text-cyan-400 underline font-mono"
+        >
+          Change number
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="font-mono text-sm space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="text-cyan-400 font-bold">?</span>
+        <span className="text-slate-200 font-medium">{message}</span>
+        <span className="text-xs text-slate-500">[{min}..{max}]</span>
+      </div>
+
+      <div className="flex items-center gap-3 pl-4">
+        <span className="text-cyan-400 font-bold">❯</span>
+        <div className="flex items-center gap-2 bg-dark-900 border border-dark-750 px-3 py-1 rounded">
+          <input
+            type="number"
+            value={val}
+            onChange={(e) => setVal(Number(e.target.value))}
+            min={min}
+            max={max}
+            step={step}
+            className="bg-transparent text-slate-100 font-mono text-sm outline-none w-28"
+          />
+          <div className="flex flex-col gap-0.5 text-slate-400">
+            <button onClick={increment} className="hover:text-cyan-400" title="Step Up">
+              <ArrowUp className="w-3 h-3" />
+            </button>
+            <button onClick={decrement} className="hover:text-cyan-400" title="Step Down">
+              <ArrowDown className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-[11px] text-slate-500 pt-2 border-t border-dark-800">
+        Use <kbd className="px-1 py-0.5 rounded bg-dark-800 text-slate-300">↑</kbd> <kbd className="px-1 py-0.5 rounded bg-dark-800 text-slate-300">↓</kbd> to step · Press <kbd className="px-1 py-0.5 rounded bg-dark-800 text-slate-300">Enter</kbd> to confirm
+      </div>
+    </div>
+  );
+}
+
 export function MultiSelectRenderer({ config }) {
   const {
     message = 'Select options',
-    options = [],
+    items = config.options || [],
     min = 0,
     max = 10
   } = config;
 
   const [selectedValues, setSelectedValues] = useState(() =>
-    options.filter(o => o.checked).map(o => o.value)
+    items.filter(o => o.selected || o.checked).map(o => o.value)
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -201,13 +296,13 @@ export function MultiSelectRenderer({ config }) {
       if (submitted) return;
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setActiveIndex((prev) => (prev + 1) % options.length);
+        setActiveIndex((prev) => (prev + 1) % items.length);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setActiveIndex((prev) => (prev - 1 + options.length) % options.length);
+        setActiveIndex((prev) => (prev - 1 + items.length) % items.length);
       } else if (e.key === ' ') {
         e.preventDefault();
-        const currentVal = options[activeIndex]?.value;
+        const currentVal = items[activeIndex]?.value;
         if (currentVal) toggleOption(currentVal);
       } else if (e.key === 'Enter') {
         e.preventDefault();
@@ -217,7 +312,7 @@ export function MultiSelectRenderer({ config }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [options, activeIndex, selectedValues, submitted]);
+  }, [items, activeIndex, selectedValues, submitted]);
 
   const toggleOption = (val) => {
     setSelectedValues((prev) => {
@@ -251,13 +346,13 @@ export function MultiSelectRenderer({ config }) {
   return (
     <div className="font-mono text-sm space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-emerald-400 font-bold">?</span>
+        <span className="text-cyan-400 font-bold">?</span>
         <span className="text-slate-200 font-medium">{message}</span>
         <span className="text-xs text-slate-500">(Press Space to select, Enter to finish)</span>
       </div>
 
       <div className="space-y-1 pl-4">
-        {options.map((opt, idx) => {
+        {items.map((opt, idx) => {
           const isFocused = activeIndex === idx;
           const isChecked = selectedValues.includes(opt.value);
           return (
@@ -292,7 +387,7 @@ export function MultiSelectRenderer({ config }) {
 }
 
 export function ConfirmRenderer({ config }) {
-  const { message = 'Are you sure you want to proceed?', default: def = false } = config;
+  const { message = 'Are you sure you want to proceed?', default: def = false, activeText = 'Yes', inactiveText = 'No' } = config;
   const [choice, setChoice] = useState(def);
   const [submitted, setSubmitted] = useState(false);
 
@@ -316,18 +411,18 @@ export function ConfirmRenderer({ config }) {
   return (
     <div className="font-mono text-sm space-y-3">
       <div className="flex items-center gap-2">
-        <span className={submitted ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+        <span className={submitted ? 'text-emerald-400 font-bold' : 'text-cyan-400 font-bold'}>
           {submitted ? '✔' : '?'}
         </span>
         <span className="text-slate-200 font-medium">{message}</span>
         {!submitted && (
           <span className="text-xs text-slate-400">
-            ({def ? 'Y/n' : 'y/N'})
+            ({def ? `${activeText}/${inactiveText.toLowerCase()}` : `${activeText.toLowerCase()}/${inactiveText}`})
           </span>
         )}
         {submitted && (
           <span className={choice ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
-            {choice ? 'yes' : 'no'}
+            {choice ? activeText : inactiveText}
           </span>
         )}
       </div>
@@ -340,7 +435,7 @@ export function ConfirmRenderer({ config }) {
               choice ? 'bg-cyan-950 text-cyan-300 border-cyan-800' : 'bg-dark-800 text-slate-400 border-dark-700'
             }`}
           >
-            Yes (y)
+            {activeText} (y)
           </button>
           <button
             onClick={() => { setChoice(false); setSubmitted(true); }}
@@ -348,7 +443,7 @@ export function ConfirmRenderer({ config }) {
               !choice ? 'bg-cyan-950 text-cyan-300 border-cyan-800' : 'bg-dark-800 text-slate-400 border-dark-700'
             }`}
           >
-            No (n)
+            {inactiveText} (n)
           </button>
         </div>
       ) : (
@@ -364,7 +459,7 @@ export function ConfirmRenderer({ config }) {
 }
 
 export function PasswordRenderer({ config }) {
-  const { message = 'Enter password', mask = '•' } = config;
+  const { message = 'Enter password', mask = '*' } = config;
   const [val, setVal] = useState('supersecret123');
   const [showPlain, setShowPlain] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -397,6 +492,48 @@ export function PasswordRenderer({ config }) {
 
       <div className="text-[11px] text-slate-500 pl-4">
         Characters are masked with '{mask}' in standard terminal stdout.
+      </div>
+    </div>
+  );
+}
+
+export function DividerRenderer({ config }) {
+  const { title = 'SECTION', borderColor = 'green', titleAlign = 'center', character = '─' } = config;
+
+  const colorStyles = {
+    green: 'text-emerald-400',
+    cyan: 'text-cyan-400',
+    yellow: 'text-amber-400',
+    red: 'text-red-400',
+    dim: 'text-slate-600'
+  };
+
+  const c = colorStyles[borderColor] || 'text-cyan-400';
+
+  return (
+    <div className="font-mono text-xs select-text py-4 space-y-2">
+      <div className="flex items-center w-full">
+        {titleAlign === 'center' ? (
+          <>
+            <span className={`flex-1 overflow-hidden whitespace-nowrap ${c}`}>
+              {character.repeat(40)}
+            </span>
+            <span className="px-3 font-bold text-white tracking-wider">
+              {title}
+            </span>
+            <span className={`flex-1 overflow-hidden whitespace-nowrap ${c}`}>
+              {character.repeat(40)}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className={`w-6 ${c}`}>{character.repeat(4)}</span>
+            <span className="px-3 font-bold text-white tracking-wider">{title}</span>
+            <span className={`flex-1 overflow-hidden whitespace-nowrap ${c}`}>
+              {character.repeat(70)}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -461,7 +598,7 @@ export function AutocompleteRenderer({ config }) {
 }
 
 export function BannerRenderer({ config }) {
-  const { title = 'TERMORA', subtitle = 'CLI Toolkit', badge = 'v1.0.0', theme = 'cyan' } = config;
+  const { title = 'TERMORA', subtitle = 'CLI Toolkit', badge = 'v0.1.0' } = config;
 
   return (
     <div className="font-mono text-center py-6 px-4 rounded-lg border border-dark-750 bg-gradient-to-b from-dark-900 to-dark-950 select-text">
@@ -482,11 +619,11 @@ export function BannerRenderer({ config }) {
 }
 
 export function ColorsRenderer({ config }) {
-  const { text = 'Termora Terminal Colors' } = config;
+  const { text = 'TermKit Terminal Colors' } = config;
 
   return (
     <div className="font-mono text-xs space-y-4">
-      <div className="text-slate-400 mb-2">ANSI 16-Color Palette Matrix:</div>
+      <div className="text-slate-400 mb-2">Nesting-Safe ANSI Color Matrix:</div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="p-2 rounded bg-dark-900 border border-dark-800 text-cyan-400">
@@ -508,10 +645,10 @@ export function ColorsRenderer({ config }) {
           colors.blue("{text}")
         </div>
         <div className="p-2 rounded bg-dark-900 border border-dark-800 text-white font-bold">
-          colors.bold("{text}")
+          style.bold("{text}")
         </div>
         <div className="p-2 rounded bg-dark-900 border border-dark-800 text-slate-500 italic">
-          colors.dim.italic("{text}")
+          style.dim.italic("{text}")
         </div>
       </div>
     </div>

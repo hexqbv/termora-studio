@@ -1,6 +1,5 @@
 import React from 'react';
 import { Sliders, RotateCcw, Sparkles } from 'lucide-react';
-import { Button } from '../common/Button';
 
 export function PlaygroundConfig({
   component,
@@ -77,6 +76,41 @@ export function PlaygroundConfig({
           </div>
         )}
 
+        {/* Number controls: min, max, step */}
+        {config.min !== undefined && component.id === 'number' && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-slate-400 font-mono text-[11px] block">Min:</label>
+                <input
+                  type="number"
+                  value={config.min}
+                  onChange={(e) => updateField('min', Number(e.target.value))}
+                  className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-100 font-mono text-xs focus:border-cyan-400 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-slate-400 font-mono text-[11px] block">Max:</label>
+                <input
+                  type="number"
+                  value={config.max}
+                  onChange={(e) => updateField('max', Number(e.target.value))}
+                  className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-100 font-mono text-xs focus:border-cyan-400 outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-slate-400 font-mono text-[11px] block">Step:</label>
+              <input
+                type="number"
+                value={config.step}
+                onChange={(e) => updateField('step', Number(e.target.value))}
+                className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-100 font-mono text-xs focus:border-cyan-400 outline-none"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Text field for Box content */}
         {config.content !== undefined && (
           <div className="space-y-1">
@@ -92,7 +126,7 @@ export function PlaygroundConfig({
           </div>
         )}
 
-        {/* Title for Box or Banner */}
+        {/* Title for Box, Divider, or Banner */}
         {config.title !== undefined && (
           <div className="space-y-1">
             <label className="text-slate-400 font-mono text-[11px] block">
@@ -107,6 +141,27 @@ export function PlaygroundConfig({
           </div>
         )}
 
+        {/* Title Alignment (Box & Divider) */}
+        {(config.titleAlign !== undefined || config.titleAlignment !== undefined) && (
+          <div className="space-y-1">
+            <label className="text-slate-400 font-mono text-[11px] block">
+              Title Alignment:
+            </label>
+            <select
+              value={config.titleAlign || config.titleAlignment || 'left'}
+              onChange={(e) => {
+                updateField('titleAlign', e.target.value);
+                updateField('titleAlignment', e.target.value);
+              }}
+              className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-200 font-mono text-xs focus:border-cyan-400 outline-none cursor-pointer"
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+        )}
+
         {/* Border Style (for Box & Table) */}
         {config.borderStyle !== undefined && (
           <div className="space-y-1">
@@ -118,45 +173,11 @@ export function PlaygroundConfig({
               onChange={(e) => updateField('borderStyle', e.target.value)}
               className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-200 font-mono text-xs focus:border-cyan-400 outline-none cursor-pointer"
             >
-              <option value="round">Round (╭─╮│╰─╯)</option>
+              <option value="rounded">Rounded (╭─╮│╰─╯)</option>
               <option value="single">Single (┌─┐│└─┘)</option>
               <option value="double">Double (╔═╗║╚═╝)</option>
-              <option value="heavy">Heavy (┏━┓┃┗━┛)</option>
-              <option value="classic">Classic (+--+|+-+)</option>
-            </select>
-          </div>
-        )}
-
-        {/* Spinner text */}
-        {config.text !== undefined && (
-          <div className="space-y-1">
-            <label className="text-slate-400 font-mono text-[11px] block">
-              Display Text:
-            </label>
-            <input
-              type="text"
-              value={config.text}
-              onChange={(e) => updateField('text', e.target.value)}
-              className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-100 font-mono text-xs focus:border-cyan-400 outline-none"
-            />
-          </div>
-        )}
-
-        {/* Spinner style */}
-        {config.style !== undefined && (
-          <div className="space-y-1">
-            <label className="text-slate-400 font-mono text-[11px] block">
-              Spinner Animation Style:
-            </label>
-            <select
-              value={config.style}
-              onChange={(e) => updateField('style', e.target.value)}
-              className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-200 font-mono text-xs focus:border-cyan-400 outline-none cursor-pointer"
-            >
-              <option value="dots">Dots (⠋⠙⠹⠸⠼⠴)</option>
-              <option value="arc">Arc (◜◠◝◞◡◟)</option>
-              <option value="line">Line (-\|/)</option>
-              <option value="arrow">Arrow (←↖↑↗→)</option>
+              <option value="bold">Bold (┏━┓┃┗━┛)</option>
+              <option value="ascii">ASCII (+--+|+-+)</option>
             </select>
           </div>
         )}
@@ -176,13 +197,13 @@ export function PlaygroundConfig({
               className="w-full bg-dark-950 border border-dark-750 rounded p-1.5 text-slate-200 font-mono text-xs focus:border-cyan-400 outline-none cursor-pointer"
             >
               <option value="cyan">Cyan</option>
-              <option value="emerald">Emerald</option>
-              <option value="green">Green</option>
-              <option value="yellow">Amber/Yellow</option>
+              <option value="green">Green (Emerald)</option>
+              <option value="yellow">Yellow (Amber)</option>
               <option value="red">Red</option>
-              <option value="magenta">Magenta/Pink</option>
+              <option value="magenta">Magenta</option>
               <option value="blue">Blue</option>
               <option value="white">White</option>
+              <option value="dim">Dim / Muted</option>
             </select>
           </div>
         )}
@@ -236,7 +257,7 @@ export function PlaygroundConfig({
             </div>
             <div className="space-y-1">
               <label className="text-slate-400 font-mono text-[11px] block">
-                Bar Width (characters):
+                Bar Width (columns):
               </label>
               <input
                 type="number"
@@ -252,7 +273,7 @@ export function PlaygroundConfig({
       </div>
 
       <div className="p-3 bg-dark-950 border-t border-dark-800 text-[11px] text-slate-500 font-mono">
-        Changes automatically synchronize with terminal preview & code output.
+        Changes automatically synchronize with terminal preview & verified package code output.
       </div>
     </div>
   );

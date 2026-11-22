@@ -17,7 +17,7 @@ export function Navbar({ activePage, setActivePage }) {
   const [showGithubModal, setShowGithubModal] = useState(false);
 
   const handleCopyInstall = () => {
-    navigator.clipboard.writeText('npm install termora');
+    navigator.clipboard.writeText('npm install termkit-ui');
     setCopiedInstall(true);
     setTimeout(() => setCopiedInstall(false), 2000);
   };
@@ -50,7 +50,7 @@ export function Navbar({ activePage, setActivePage }) {
                   </span>
                   <Badge variant="cyan" size="xs">STUDIO</Badge>
                 </div>
-                <p className="text-[10px] text-slate-500 font-mono -mt-0.5">CLI Toolkit for Node.js</p>
+                <p className="text-[10px] text-slate-500 font-mono -mt-0.5">Showcase for termkit-ui</p>
               </div>
             </button>
           </div>
@@ -94,7 +94,7 @@ export function Navbar({ activePage, setActivePage }) {
               title="Click to copy npm install command"
             >
               <span className="text-slate-500">$</span>
-              <span>npm i termora</span>
+              <span>npm i termkit-ui</span>
               {copiedInstall ? (
                 <Check className="w-3.5 h-3.5 text-emerald-400 ml-1" />
               ) : (
@@ -156,7 +156,7 @@ export function Navbar({ activePage, setActivePage }) {
                 onClick={handleCopyInstall}
                 className="w-full flex items-center justify-center gap-2 py-2 text-xs font-mono bg-dark-900 border border-dark-750 rounded-lg text-slate-300"
               >
-                <span>npm install termora</span>
+                <span>npm install termkit-ui</span>
                 {copiedInstall ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
@@ -179,17 +179,18 @@ export function Navbar({ activePage, setActivePage }) {
                 <GithubIcon className="w-5 h-5 text-slate-200" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Termora Open Source Project</h3>
-                <p className="text-xs text-slate-400 font-mono">github.com/termora/termora</p>
+                <h3 className="text-base font-bold text-white">TermKit Open Source Repository</h3>
+                <p className="text-xs text-slate-400 font-mono">github.com/hexqbv/TermKit</p>
               </div>
             </div>
             <p className="text-sm text-slate-300 leading-relaxed mb-4">
-              Termora is an open-source initiative designed for the Node.js community. The repository holds the core runtime, ANSI engine, and CLI component drivers.
+              TermKit (published on npm as <code className="text-cyan-300 font-mono">termkit-ui</code>) is authored by Sagar. Zero runtime dependencies, pure ESM, and built for Node.js &gt;= 22.0.0.
             </p>
             <div className="bg-dark-950 p-3 rounded-lg border border-dark-800 text-xs font-mono text-slate-400 mb-5 space-y-1">
+              <div>Package: termkit-ui (v0.1.0)</div>
               <div>License: MIT Open Source</div>
-              <div>Runtime: Node.js 18+ (Pure ESM & CJS)</div>
-              <div>Repository status: Public Pre-Release</div>
+              <div>Runtime: Node.js &gt;= 22.0.0 (Pure ESM)</div>
+              <div>Repository: https://github.com/hexqbv/TermKit.git</div>
             </div>
             <div className="flex justify-end gap-2">
               <button

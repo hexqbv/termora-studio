@@ -1,4 +1,5 @@
-// Centralized registry of Termora components and their schemas
+// Centralized registry of TermKit UI components and their schemas
+// Mapped directly to the actual npm package: termkit-ui@0.1.0
 
 export const CATEGORIES = [
   { id: 'all', name: 'All Components' },
@@ -16,31 +17,32 @@ export const COMPONENTS = [
     category: 'prompts',
     status: 'verified',
     tagline: 'Interactive single-selection list with keyboard navigation',
-    description: 'Allows users to pick one option from a list using arrow keys or numbers. Supports looping, custom pointer glyphs, and return values.',
+    description: 'Allows users to pick one option from a list using arrow keys. Supports loop navigation, item hints, disabled items, and paging.',
+    packageExport: 'termkit-ui/prompts',
     defaultConfig: {
       message: 'Choose your deployment region',
-      options: [
-        { label: 'US East (N. Virginia)', value: 'us-east-1' },
+      items: [
+        { label: 'US East (N. Virginia)', value: 'us-east-1', hint: 'Default' },
         { label: 'US West (Oregon)', value: 'us-west-2' },
         { label: 'EU West (Frankfurt)', value: 'eu-west-1' },
         { label: 'AP South (Mumbai)', value: 'ap-south-1' }
       ],
-      pointer: '❯',
-      loop: true,
-      pageSize: 5
+      default: 'us-east-1',
+      pageSize: 5,
+      loop: true
     },
     presets: [
       {
         name: 'Deployment Region',
         config: {
           message: 'Choose your deployment region',
-          options: [
-            { label: 'US East (N. Virginia)', value: 'us-east-1' },
+          items: [
+            { label: 'US East (N. Virginia)', value: 'us-east-1', hint: 'Low latency' },
             { label: 'US West (Oregon)', value: 'us-west-2' },
             { label: 'EU West (Frankfurt)', value: 'eu-west-1' },
             { label: 'AP South (Mumbai)', value: 'ap-south-1' }
           ],
-          pointer: '❯',
+          default: 'us-east-1',
           loop: true
         }
       },
@@ -48,39 +50,40 @@ export const COMPONENTS = [
         name: 'Framework Selector',
         config: {
           message: 'Select project template',
-          options: [
+          items: [
             { label: 'React + Vite', value: 'react' },
-            { label: 'Next.js (App Router)', value: 'next' },
+            { label: 'Next.js 15 (App Router)', value: 'next' },
             { label: 'Vue 3 + Vite', value: 'vue' },
-            { label: 'SvelteKit', value: 'svelte' }
+            { label: 'SvelteKit 2', value: 'svelte' }
           ],
-          pointer: '→',
+          default: 'react',
           loop: false
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
-      const opts = JSON.stringify(cfg.options, null, 2).replace(/\n/g, '\n  ');
+      const items = JSON.stringify(cfg.items, null, 2).replace(/\n/g, '\n  ');
       if (isEsm) {
-        return `import { select } from "termora";
+        return `import { select } from "termkit-ui/prompts";
 
 const region = await select({
   message: "${cfg.message}",
-  options: ${opts},
-  pointer: "${cfg.pointer || '❯'}",
-  loop: ${cfg.loop}
+  items: ${items},
+  default: "${cfg.default || 'us-east-1'}",
+  loop: ${cfg.loop !== false}
 });
 
 console.log(\`Provisioning in region: \${region}\`);`;
       }
-      return `const { select } = require("termora");
-
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
 async function main() {
+  const { select } = await import("termkit-ui/prompts");
+
   const region = await select({
     message: "${cfg.message}",
-    options: ${opts},
-    pointer: "${cfg.pointer || '❯'}",
-    loop: ${cfg.loop}
+    items: ${items},
+    default: "${cfg.default || 'us-east-1'}",
+    loop: ${cfg.loop !== false}
   });
 
   console.log(\`Provisioning in region: \${region}\`);
@@ -96,7 +99,8 @@ main();`;
     category: 'prompts',
     status: 'verified',
     tagline: 'Standard single-line text input with placeholder & validation',
-    description: 'Prompts the user for a text string. Includes live inline validation, default fallback values, and input trimming.',
+    description: 'Prompts the user for a text string. Includes live inline validation, fallback defaults, and initial buffer pre-filling.',
+    packageExport: 'termkit-ui/prompts',
     defaultConfig: {
       message: 'Project name',
       default: 'my-cli-app',
@@ -114,22 +118,22 @@ main();`;
         }
       },
       {
-        name: 'Port Number',
+        name: 'Database Host',
         config: {
-          message: 'Server listen port',
-          default: '3000',
-          placeholder: '1024-65535',
-          validate: 'numeric'
+          message: 'PostgreSQL host address',
+          default: 'localhost',
+          placeholder: 'db.internal.net',
+          validate: 'required'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
       const validationSnippet = cfg.validate === 'required'
         ? 'validate: (val) => val.trim().length > 0 || "Project name cannot be empty"'
-        : 'validate: (val) => !isNaN(val) && Number(val) > 0 || "Must be a valid port number"';
+        : 'validate: (val) => Boolean(val) || "Required"';
 
       if (isEsm) {
-        return `import { input } from "termora";
+        return `import { input } from "termkit-ui/prompts";
 
 const projectName = await input({
   message: "${cfg.message}",
@@ -140,9 +144,10 @@ const projectName = await input({
 
 console.log(\`Created project: \${projectName}\`);`;
       }
-      return `const { input } = require("termora");
-
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
 async function main() {
+  const { input } = await import("termkit-ui/prompts");
+
   const projectName = await input({
     message: "${cfg.message}",
     default: "${cfg.default}",
@@ -158,20 +163,95 @@ main();`;
   },
 
   {
+    id: 'number',
+    name: 'Number',
+    category: 'prompts',
+    status: 'verified',
+    tagline: 'Numeric input with keyboard arrow stepping and bounds checking',
+    description: 'Prompts user for integer or floating-point values. ArrowUp and ArrowDown increment and decrement by step. Automatically validates min and max bounds.',
+    packageExport: 'termkit-ui/prompts',
+    defaultConfig: {
+      message: 'Port number',
+      default: 3000,
+      min: 1024,
+      max: 65535,
+      step: 1,
+      float: false
+    },
+    presets: [
+      {
+        name: 'Server Port',
+        config: {
+          message: 'Server listen port',
+          default: 3000,
+          min: 1024,
+          max: 65535,
+          step: 1,
+          float: false
+        }
+      },
+      {
+        name: 'Worker Threads',
+        config: {
+          message: 'Thread pool count',
+          default: 4,
+          min: 1,
+          max: 32,
+          step: 1,
+          float: false
+        }
+      }
+    ],
+    generateCode: (cfg, isEsm = true) => {
+      if (isEsm) {
+        return `import { number } from "termkit-ui/prompts";
+
+const port = await number({
+  message: "${cfg.message}",
+  default: ${cfg.default},
+  min: ${cfg.min},
+  max: ${cfg.max},
+  step: ${cfg.step || 1},
+  float: ${Boolean(cfg.float)}
+});
+
+console.log(\`Server configured on port: \${port}\`);`;
+      }
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
+async function main() {
+  const { number } = await import("termkit-ui/prompts");
+
+  const port = await number({
+    message: "${cfg.message}",
+    default: ${cfg.default},
+    min: ${cfg.min},
+    max: ${cfg.max},
+    step: ${cfg.step || 1}
+  });
+
+  console.log(\`Server configured on port: \${port}\`);
+}
+
+main();`;
+    }
+  },
+
+  {
     id: 'multiselect',
     name: 'Multi-Select',
     category: 'prompts',
     status: 'verified',
     tagline: 'Multiple item checkbox selection with limit controls',
-    description: 'Allows selecting one or more options using Space to toggle and Enter to finish. Supports min/max selection bounds.',
+    description: 'Allows selecting one or more items using Space to toggle and Enter to finish. Supports min/max selection bounds and keyboard shortcuts ("a" to toggle all).',
+    packageExport: 'termkit-ui/prompts',
     defaultConfig: {
       message: 'Select CLI tool extensions to install',
-      options: [
-        { label: 'TypeScript support', value: 'ts', checked: true },
-        { label: 'ESLint + Prettier', value: 'lint', checked: true },
-        { label: 'Docker containerization', value: 'docker', checked: false },
-        { label: 'GitHub Actions workflow', value: 'ci', checked: false },
-        { label: 'Tailwind CSS CLI', value: 'tailwind', checked: false }
+      items: [
+        { label: 'TypeScript support', value: 'ts', selected: true },
+        { label: 'ESLint + Prettier', value: 'lint', selected: true },
+        { label: 'Docker containerization', value: 'docker', selected: false },
+        { label: 'GitHub Actions workflow', value: 'ci', selected: false },
+        { label: 'Tailwind CSS CLI', value: 'tailwind', selected: false }
       ],
       min: 1,
       max: 4
@@ -181,11 +261,11 @@ main();`;
         name: 'Feature Flags',
         config: {
           message: 'Select CLI tool extensions to install',
-          options: [
-            { label: 'TypeScript support', value: 'ts', checked: true },
-            { label: 'ESLint + Prettier', value: 'lint', checked: true },
-            { label: 'Docker containerization', value: 'docker', checked: false },
-            { label: 'GitHub Actions workflow', value: 'ci', checked: false }
+          items: [
+            { label: 'TypeScript support', value: 'ts', selected: true },
+            { label: 'ESLint + Prettier', value: 'lint', selected: true },
+            { label: 'Docker containerization', value: 'docker', selected: false },
+            { label: 'GitHub Actions workflow', value: 'ci', selected: false }
           ],
           min: 1,
           max: 3
@@ -193,30 +273,31 @@ main();`;
       }
     ],
     generateCode: (cfg, isEsm = true) => {
-      const opts = JSON.stringify(cfg.options.map(o => ({ label: o.label, value: o.value, default: !!o.checked })), null, 2).replace(/\n/g, '\n  ');
+      const items = JSON.stringify(cfg.items, null, 2).replace(/\n/g, '\n  ');
       if (isEsm) {
-        return `import { multiselect } from "termora";
+        return `import { multiselect } from "termkit-ui/prompts";
 
 const features = await multiselect({
   message: "${cfg.message}",
-  options: ${opts},
+  items: ${items},
   min: ${cfg.min || 1},
   max: ${cfg.max || 5}
 });
 
-console.log("Configuring selected features:", features);`;
+console.log("Configured features:", features);`;
       }
-      return `const { multiselect } = require("termora");
-
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
 async function main() {
+  const { multiselect } = await import("termkit-ui/prompts");
+
   const features = await multiselect({
     message: "${cfg.message}",
-    options: ${opts},
+    items: ${items},
     min: ${cfg.min || 1},
     max: ${cfg.max || 5}
   });
 
-  console.log("Configuring selected features:", features);
+  console.log("Configured features:", features);
 }
 
 main();`;
@@ -228,35 +309,44 @@ main();`;
     name: 'Confirm',
     category: 'prompts',
     status: 'verified',
-    tagline: 'Yes/No confirmation prompt with customizable default',
-    description: 'A binary question prompt responding to (y/n) keys or Enter. Highly standard for safety-critical operations.',
+    tagline: 'Binary Yes/No prompt with customizable labels',
+    description: 'A binary question prompt responding to (y/n) keys or arrow navigation. Configurable activeText and inactiveText labels.',
+    packageExport: 'termkit-ui/prompts',
     defaultConfig: {
       message: 'Proceed with destructive database migration?',
-      default: false
+      default: false,
+      activeText: 'Yes',
+      inactiveText: 'No'
     },
     presets: [
       {
         name: 'Dangerous Action',
         config: {
           message: 'Proceed with destructive database migration?',
-          default: false
+          default: false,
+          activeText: 'Yes',
+          inactiveText: 'No'
         }
       },
       {
         name: 'Install Dependencies',
         config: {
           message: 'Install missing npm dependencies now?',
-          default: true
+          default: true,
+          activeText: 'Yes',
+          inactiveText: 'No'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
       if (isEsm) {
-        return `import { confirm } from "termora";
+        return `import { confirm } from "termkit-ui/prompts";
 
 const shouldProceed = await confirm({
   message: "${cfg.message}",
-  default: ${cfg.default}
+  default: ${cfg.default},
+  activeText: "${cfg.activeText || 'Yes'}",
+  inactiveText: "${cfg.inactiveText || 'No'}"
 });
 
 if (!shouldProceed) {
@@ -264,9 +354,10 @@ if (!shouldProceed) {
   process.exit(0);
 }`;
       }
-      return `const { confirm } = require("termora");
-
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
 async function run() {
+  const { confirm } = await import("termkit-ui/prompts");
+
   const shouldProceed = await confirm({
     message: "${cfg.message}",
     default: ${cfg.default}
@@ -288,44 +379,46 @@ run();`;
     category: 'prompts',
     status: 'verified',
     tagline: 'Secure masked input for sensitive tokens and keys',
-    description: 'Masks user keystrokes with bullets or asterisks. Prevents secret leaking in terminal session logs or screen recordings.',
+    description: 'Masks user keystrokes with bullets or asterisks. Typed value is never echoed in output or logs.',
+    packageExport: 'termkit-ui/prompts',
     defaultConfig: {
       message: 'Enter API access token',
-      mask: '•'
+      mask: '*'
     },
     presets: [
       {
         name: 'API Token',
         config: {
           message: 'Enter API access token',
-          mask: '•'
+          mask: '*'
         }
       },
       {
         name: 'Master Secret',
         config: {
           message: 'Database master password',
-          mask: '*'
+          mask: '•'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
       if (isEsm) {
-        return `import { password } from "termora";
+        return `import { password } from "termkit-ui/prompts";
 
 const secretKey = await password({
   message: "${cfg.message}",
-  mask: "${cfg.mask || '•'}"
+  mask: "${cfg.mask || '*'}"
 });
 
 console.log("Token received (length:", secretKey.length, ")");`;
       }
-      return `const { password } = require("termora");
-
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
 async function authenticate() {
+  const { password } = await import("termkit-ui/prompts");
+
   const secretKey = await password({
     message: "${cfg.message}",
-    mask: "${cfg.mask || '•'}"
+    mask: "${cfg.mask || '*'}"
   });
 
   console.log("Token received (length:", secretKey.length, ")");
@@ -336,131 +429,64 @@ authenticate();`;
   },
 
   {
-    id: 'autocomplete',
-    name: 'Autocomplete',
-    category: 'prompts',
-    status: 'verified',
-    tagline: 'Searchable auto-suggest prompt with fuzzy text filtering',
-    description: 'Interactive text input that filters suggestions dynamically as the user types.',
-    defaultConfig: {
-      message: 'Search Kubernetes cluster namespace',
-      options: [
-        'default',
-        'kube-system',
-        'kube-public',
-        'ingress-nginx',
-        'production-api',
-        'staging-web',
-        'monitoring-prometheus'
-      ],
-      limit: 5
-    },
-    presets: [
-      {
-        name: 'Kubernetes Namespaces',
-        config: {
-          message: 'Search Kubernetes cluster namespace',
-          options: ['default', 'kube-system', 'ingress-nginx', 'production-api', 'staging-web'],
-          limit: 5
-        }
-      }
-    ],
-    generateCode: (cfg, isEsm = true) => {
-      const opts = JSON.stringify(cfg.options);
-      if (isEsm) {
-        return `import { autocomplete } from "termora";
-
-const namespace = await autocomplete({
-  message: "${cfg.message}",
-  options: ${opts},
-  limit: ${cfg.limit || 5}
-});
-
-console.log(\`Connected to namespace: \${namespace}\`);`;
-      }
-      return `const { autocomplete } = require("termora");
-
-async function main() {
-  const namespace = await autocomplete({
-    message: "${cfg.message}",
-    options: ${opts},
-    limit: ${cfg.limit || 5}
-  });
-
-  console.log(\`Connected to namespace: \${namespace}\`);
-}
-
-main();`;
-    }
-  },
-
-  {
     id: 'spinner',
     name: 'Spinner',
     category: 'progress',
     status: 'verified',
-    tagline: 'Smooth terminal loading indicator with state transitions',
-    description: 'Displays a continuous animated glyph during asynchronous tasks. Includes succeed, fail, warn, and info methods.',
+    tagline: 'Concurrent log-safe terminal loading indicator',
+    description: 'Displays a continuous animated glyph during asynchronous tasks. Asynchronous background logs write cleanly without tearing the spinner line. Methods: succeed, fail, warn, stop.',
+    packageExport: 'termkit-ui/progress',
     defaultConfig: {
-      text: 'Compiling TypeScript build targets...',
-      style: 'dots',
+      message: 'Compiling TypeScript build targets...',
       color: 'cyan'
     },
     presets: [
       {
-        name: 'Dots (Standard)',
+        name: 'Cyan Build',
         config: {
-          text: 'Compiling TypeScript build targets...',
-          style: 'dots',
+          message: 'Compiling TypeScript build targets...',
           color: 'cyan'
         }
       },
       {
-        name: 'Arc (Modern)',
+        name: 'Emerald Fetch',
         config: {
-          text: 'Fetching remote registry tarballs...',
-          style: 'arc',
-          color: 'emerald'
-        }
-      },
-      {
-        name: 'Line (Minimal)',
-        config: {
-          text: 'Optimizing production bundle...',
-          style: 'line',
-          color: 'yellow'
+          message: 'Fetching remote registry tarballs...',
+          color: 'green'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
       if (isEsm) {
-        return `import { spinner } from "termora";
+        return `import { spinner } from "termkit-ui/progress";
+import { defaultCoordinator } from "termkit-ui";
 
 const loader = spinner({
-  text: "${cfg.text}",
-  style: "${cfg.style}",
-  color: "${cfg.color}"
+  message: "${cfg.message}",
+  color: "${cfg.color || 'cyan'}"
 }).start();
 
 try {
+  // Concurrent logs will not tear active spinner line
+  defaultCoordinator.log("Worker 1: compiling AST...");
   await doAsyncWork();
-  loader.succeed("Build completed in 1.42s!");
+  loader.succeed("Build completed successfully!");
 } catch (err) {
   loader.fail("Build failed: " + err.message);
 }`;
       }
-      return `const { spinner } = require("termora");
-
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
 async function runBuild() {
+  const { spinner } = await import("termkit-ui/progress");
+
   const loader = spinner({
-    text: "${cfg.text}",
-    style: "${cfg.style}",
-    color: "${cfg.color}"
+    message: "${cfg.message}",
+    color: "${cfg.color || 'cyan'}"
   }).start();
 
   try {
     await doAsyncWork();
-    loader.succeed("Build completed in 1.42s!");
+    loader.succeed("Build completed successfully!");
   } catch (err) {
     loader.fail("Build failed: " + err.message);
   }
@@ -475,74 +501,70 @@ runBuild();`;
     name: 'Progress Bar',
     category: 'progress',
     status: 'verified',
-    tagline: 'Deterministic visual progress gauge with ETA & rates',
-    description: 'Visual percentage gauge for bounded tasks such as downloading files, running test suites, or processing records.',
+    tagline: 'Deterministic visual progress gauge with ETA & percentages',
+    description: 'Visual percentage gauge for bounded tasks. Supports .update(current), .increment(delta), .complete(), and automatic accessible milestone mode in CI.',
+    packageExport: 'termkit-ui/progress',
     defaultConfig: {
       total: 100,
       current: 68,
-      width: 32,
-      completeChar: '█',
-      incompleteChar: '░',
-      format: ':bar :percent :current/:total items (:eta remaining)'
+      width: 30,
+      message: 'Downloading assets'
     },
     presets: [
       {
-        name: 'Block Bar',
+        name: 'Asset Downloader',
         config: {
           total: 100,
           current: 68,
-          width: 32,
-          completeChar: '█',
-          incompleteChar: '░',
-          format: ':bar :percent :current/:total items'
+          width: 30,
+          message: 'Downloading assets'
         }
       },
       {
-        name: 'Arrow Bar',
+        name: 'Batch Processing',
         config: {
           total: 50,
           current: 34,
-          width: 28,
-          completeChar: '=',
-          incompleteChar: '-',
-          format: '[:bar] :percent ETA: :eta'
+          width: 25,
+          message: 'Processing batch'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
       if (isEsm) {
-        return `import { progressBar } from "termora";
+        return `import { progressBar } from "termkit-ui/progress";
 
 const bar = progressBar({
   total: ${cfg.total},
-  width: ${cfg.width},
-  completeChar: "${cfg.completeChar}",
-  incompleteChar: "${cfg.incompleteChar}",
-  format: "${cfg.format}"
+  width: ${cfg.width || 30},
+  message: "${cfg.message || ''}",
+  showEta: true,
+  showPercentage: true
 });
 
 for (let i = 0; i < ${cfg.total}; i++) {
-  await processNextBatch();
-  bar.tick(1);
+  await processBatchItem();
+  bar.increment(1);
 }
 
-bar.complete("All batches processed successfully!");`;
+bar.complete("All items processed successfully!");`;
       }
-      return `const { progressBar } = require("termora");
-
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
 async function run() {
+  const { progressBar } = await import("termkit-ui/progress");
+
   const bar = progressBar({
     total: ${cfg.total},
-    width: ${cfg.width},
-    completeChar: "${cfg.completeChar}",
-    incompleteChar: "${cfg.incompleteChar}",
-    format: "${cfg.format}"
+    width: ${cfg.width || 30},
+    message: "${cfg.message || ''}"
   });
 
   for (let i = 0; i < ${cfg.total}; i++) {
-    await processNextBatch();
-    bar.tick(1);
+    await processBatchItem();
+    bar.increment(1);
   }
+
+  bar.complete("Done!");
 }
 
 run();`;
@@ -554,26 +576,27 @@ run();`;
     name: 'Box & Panel',
     category: 'layout',
     status: 'verified',
-    tagline: 'Bordered containers with custom styles, titles, and padding',
-    description: 'Encapsulates terminal text in stylish borders. Supports rounded, single, double, and heavy border styles with title alignment.',
+    tagline: 'Unicode border containers with padding and titles',
+    description: 'Encapsulates terminal text inside styled borders (rounded, single, double, bold, ascii). Automatically handles CJK and emoji string widths without tearing borders.',
+    packageExport: 'termkit-ui/layout',
     defaultConfig: {
-      title: 'Termora CLI v1.0.0',
+      title: 'TermKit v0.1.0',
       content: 'Server running at https://localhost:8080\nReady to accept inbound connections.',
-      borderStyle: 'round',
+      borderStyle: 'rounded',
       padding: 1,
       borderColor: 'cyan',
-      titleAlignment: 'left'
+      titleAlign: 'left'
     },
     presets: [
       {
         name: 'Rounded Server Badge',
         config: {
-          title: 'Termora CLI v1.0.0',
+          title: 'TermKit v0.1.0',
           content: 'Server running at https://localhost:8080\nReady to accept inbound connections.',
-          borderStyle: 'round',
+          borderStyle: 'rounded',
           padding: 1,
           borderColor: 'cyan',
-          titleAlignment: 'left'
+          titleAlign: 'left'
         }
       },
       {
@@ -584,83 +607,97 @@ run();`;
           borderStyle: 'double',
           padding: 1,
           borderColor: 'yellow',
-          titleAlignment: 'center'
+          titleAlign: 'center'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
+      const contentStr = cfg.content.replace(/\n/g, '\\n');
       if (isEsm) {
-        return `import { box } from "termora";
+        return `import { box } from "termkit-ui/layout";
 
-const output = box({
+const output = box("${contentStr}", {
   title: "${cfg.title}",
-  content: "${cfg.content.replace(/\n/g, '\\n')}",
   borderStyle: "${cfg.borderStyle}",
-  padding: ${cfg.padding},
   borderColor: "${cfg.borderColor}",
-  titleAlignment: "${cfg.titleAlignment}"
+  padding: ${cfg.padding},
+  titleAlign: "${cfg.titleAlign || 'left'}"
 });
 
 console.log(output);`;
       }
-      return `const { box } = require("termora");
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
+async function main() {
+  const { box } = await import("termkit-ui/layout");
 
-const output = box({
-  title: "${cfg.title}",
-  content: "${cfg.content.replace(/\n/g, '\\n')}",
-  borderStyle: "${cfg.borderStyle}",
-  padding: ${cfg.padding},
-  borderColor: "${cfg.borderColor}",
-  titleAlignment: "${cfg.titleAlignment}"
-});
+  const output = box("${contentStr}", {
+    title: "${cfg.title}",
+    borderStyle: "${cfg.borderStyle}",
+    borderColor: "${cfg.borderColor}",
+    padding: ${cfg.padding}
+  });
 
-console.log(output);`;
+  console.log(output);
+}
+
+main();`;
     }
   },
 
   {
-    id: 'banner',
-    name: 'Banner',
+    id: 'divider',
+    name: 'Divider',
     category: 'layout',
     status: 'verified',
-    tagline: 'High-impact CLI splash headers and welcome cards',
-    description: 'Creates striking CLI headers when a CLI command is invoked, with automatic centering and subtext decoration.',
+    tagline: 'Terminal horizontal rule with optional centered or aligned title',
+    description: 'Renders a full-width rule across the terminal viewport with an optional centered or aligned title. Automatically adapts to detected terminal column width.',
+    packageExport: 'termkit-ui/layout',
     defaultConfig: {
-      title: 'TERMORA STUDIO',
-      subtitle: 'Modern Terminal UI Toolkit for Node.js',
-      badge: 'v1.0.0-rc',
-      theme: 'cyan'
+      title: 'SYSTEM STATUS',
+      borderColor: 'green',
+      titleAlign: 'center',
+      character: '─'
     },
     presets: [
       {
-        name: 'Standard Hero',
+        name: 'Centered Section',
         config: {
-          title: 'TERMORA STUDIO',
-          subtitle: 'Modern Terminal UI Toolkit for Node.js',
-          badge: 'v1.0.0-rc',
-          theme: 'cyan'
+          title: 'SYSTEM STATUS',
+          borderColor: 'green',
+          titleAlign: 'center',
+          character: '─'
+        }
+      },
+      {
+        name: 'Left Aligned Section',
+        config: {
+          title: 'BUILD PIPELINE',
+          borderColor: 'cyan',
+          titleAlign: 'left',
+          character: '─'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
       if (isEsm) {
-        return `import { banner } from "termora";
+        return `import { divider } from "termkit-ui/layout";
 
-banner({
-  title: "${cfg.title}",
-  subtitle: "${cfg.subtitle}",
-  badge: "${cfg.badge}",
-  theme: "${cfg.theme}"
-});`;
+console.log(divider("${cfg.title || ''}", {
+  borderColor: "${cfg.borderColor || 'cyan'}",
+  titleAlign: "${cfg.titleAlign || 'center'}"
+}));`;
       }
-      return `const { banner } = require("termora");
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
+async function main() {
+  const { divider } = await import("termkit-ui/layout");
 
-banner({
-  title: "${cfg.title}",
-  subtitle: "${cfg.subtitle}",
-  badge: "${cfg.badge}",
-  theme: "${cfg.theme}"
-});`;
+  console.log(divider("${cfg.title || ''}", {
+    borderColor: "${cfg.borderColor || 'cyan'}",
+    titleAlign: "${cfg.titleAlign || 'center'}"
+  }));
+}
+
+main();`;
     }
   },
 
@@ -669,56 +706,55 @@ banner({
     name: 'Table',
     category: 'data',
     status: 'verified',
-    tagline: 'Formatted ANSI tables with column headers and alignment',
-    description: 'Renders tabular data with auto-calculated column widths, borders, and custom cell alignments.',
+    tagline: 'Formatted ANSI tables with auto-width and border styles',
+    description: 'Renders tabular data from an array of objects or 2D array. Automatically calculates column widths and aligns headers and data cells.',
+    packageExport: 'termkit-ui/tables',
     defaultConfig: {
-      headers: ['Endpoint', 'Method', 'Status', 'Latency'],
       rows: [
-        ['/api/v1/auth/login', 'POST', '200 OK', '14ms'],
-        ['/api/v1/projects', 'GET', '200 OK', '42ms'],
-        ['/api/v1/deployments', 'POST', '201 Created', '128ms'],
-        ['/api/v1/health', 'GET', '200 OK', '3ms']
+        { endpoint: '/api/v1/auth/login', method: 'POST', status: '200 OK', latency: '14ms' },
+        { endpoint: '/api/v1/projects', method: 'GET', status: '200 OK', latency: '42ms' },
+        { endpoint: '/api/v1/deployments', method: 'POST', status: '201 Created', latency: '128ms' },
+        { endpoint: '/api/v1/health', method: 'GET', status: '200 OK', latency: '3ms' }
       ],
-      borderStyle: 'single'
+      borderStyle: 'rounded'
     },
     presets: [
       {
         name: 'API Metrics',
         config: {
-          headers: ['Endpoint', 'Method', 'Status', 'Latency'],
           rows: [
-            ['/api/v1/auth/login', 'POST', '200 OK', '14ms'],
-            ['/api/v1/projects', 'GET', '200 OK', '42ms'],
-            ['/api/v1/deployments', 'POST', '201 Created', '128ms'],
-            ['/api/v1/health', 'GET', '200 OK', '3ms']
+            { endpoint: '/api/v1/auth/login', method: 'POST', status: '200 OK', latency: '14ms' },
+            { endpoint: '/api/v1/projects', method: 'GET', status: '200 OK', latency: '42ms' },
+            { endpoint: '/api/v1/deployments', method: 'POST', status: '201 Created', latency: '128ms' },
+            { endpoint: '/api/v1/health', method: 'GET', status: '200 OK', latency: '3ms' }
           ],
-          borderStyle: 'single'
+          borderStyle: 'rounded'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
-      const headers = JSON.stringify(cfg.headers);
       const rows = JSON.stringify(cfg.rows, null, 2).replace(/\n/g, '\n  ');
       if (isEsm) {
-        return `import { table } from "termora";
+        return `import { table } from "termkit-ui/tables";
 
-const tableOutput = table({
-  head: ${headers},
-  rows: ${rows},
-  borderStyle: "${cfg.borderStyle}"
-});
+const rows = ${rows};
 
-console.log(tableOutput);`;
+console.log(table(rows, {
+  borderStyle: "${cfg.borderStyle || 'rounded'}"
+}));`;
       }
-      return `const { table } = require("termora");
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
+async function main() {
+  const { table } = await import("termkit-ui/tables");
 
-const tableOutput = table({
-  head: ${headers},
-  rows: ${rows},
-  borderStyle: "${cfg.borderStyle}"
-});
+  const rows = ${rows};
 
-console.log(tableOutput);`;
+  console.log(table(rows, {
+    borderStyle: "${cfg.borderStyle || 'rounded'}"
+  }));
+}
+
+main();`;
     }
   },
 
@@ -727,12 +763,13 @@ console.log(tableOutput);`;
     name: 'Colors & Styles',
     category: 'styling',
     status: 'verified',
-    tagline: 'Fast ANSI color utilities with zero dependencies',
-    description: 'Chained color and style helper functions. Features bold, dim, italic, underline, foreground colors, and RGB support.',
+    tagline: 'Nesting-safe ANSI color styler with TrueColor & 256 support',
+    description: 'Chained nesting-safe color and style functions. Features bold, dim, italic, underline, foreground colors, RGB, and Hex codes.',
+    packageExport: 'termkit-ui/styles',
     defaultConfig: {
       color: 'cyan',
       modifier: 'bold',
-      text: 'Termora CLI styling utility'
+      text: 'TermKit UI styling utility'
     },
     presets: [
       {
@@ -748,23 +785,102 @@ console.log(tableOutput);`;
         config: {
           color: 'green',
           modifier: 'underline',
-          text: 'Documentation: https://termora.dev/docs'
+          text: 'Documentation: https://github.com/hexqbv/TermKit'
         }
       }
     ],
     generateCode: (cfg, isEsm = true) => {
       if (isEsm) {
-        return `import { colors } from "termora";
+        return `import { colors, style } from "termkit-ui/styles";
 
 console.log(colors.${cfg.color}.${cfg.modifier}("${cfg.text}"));
-console.log(colors.green("✓ Passed: 48 tests"));
-console.log(colors.dim("  Duration: 1.2s"));`;
+console.log(colors.green("✔ Passed: 48 tests"));
+console.log(style.dim("  Duration: 1.2s"));`;
       }
-      return `const { colors } = require("termora");
+      return `// termkit-ui is pure ESM (Node >= 22). Use dynamic import() in CommonJS:
+async function main() {
+  const { colors, style } = await import("termkit-ui/styles");
 
-console.log(colors.${cfg.color}.${cfg.modifier}("${cfg.text}"));
-console.log(colors.green("✓ Passed: 48 tests"));
-console.log(colors.dim("  Duration: 1.2s"));`;
+  console.log(colors.${cfg.color}.${cfg.modifier}("${cfg.text}"));
+  console.log(colors.green("✔ Passed: 48 tests"));
+  console.log(style.dim("  Duration: 1.2s"));
+}
+
+main();`;
+    }
+  },
+
+  {
+    id: 'autocomplete',
+    name: 'Autocomplete',
+    category: 'prompts',
+    status: 'planned',
+    tagline: 'Fuzzy auto-suggest prompt [Planned Extension / Simulated]',
+    description: 'Interactive text input that filters suggestions dynamically as the user types. This component is currently simulated in Termora Studio and planned for future TermKit versions.',
+    packageExport: 'Simulated in Studio',
+    defaultConfig: {
+      message: 'Search Kubernetes cluster namespace',
+      options: [
+        'default',
+        'kube-system',
+        'kube-public',
+        'ingress-nginx',
+        'production-api',
+        'staging-web'
+      ],
+      limit: 5
+    },
+    presets: [
+      {
+        name: 'Kubernetes Namespaces',
+        config: {
+          message: 'Search Kubernetes cluster namespace',
+          options: ['default', 'kube-system', 'ingress-nginx', 'production-api', 'staging-web'],
+          limit: 5
+        }
+      }
+    ],
+    generateCode: (cfg, isEsm = true) => {
+      return `// Note: 'autocomplete' is a planned extension in termkit-ui roadmap.
+// In termkit-ui@0.1.0, use 'select' with searchable items or custom validation.
+console.log("Autocomplete is simulated in Termora Studio.");`;
+    }
+  },
+
+  {
+    id: 'banner',
+    name: 'Banner',
+    category: 'layout',
+    status: 'planned',
+    tagline: 'High-impact CLI splash headers [Planned Recipe / Simulated]',
+    description: 'Generates decorative welcome banners. In termkit-ui@0.1.0, combine box() and style for custom headers, or use the verified divider() primitive.',
+    packageExport: 'Simulated in Studio',
+    defaultConfig: {
+      title: 'TERMKIT STUDIO',
+      subtitle: 'Modern Terminal UI Toolkit for Node.js',
+      badge: 'v0.1.0',
+      theme: 'cyan'
+    },
+    presets: [
+      {
+        name: 'Standard Hero',
+        config: {
+          title: 'TERMKIT STUDIO',
+          subtitle: 'Modern Terminal UI Toolkit for Node.js',
+          badge: 'v0.1.0',
+          theme: 'cyan'
+        }
+      }
+    ],
+    generateCode: (cfg, isEsm = true) => {
+      return `// Recipe: Creating a banner using verified termkit-ui primitives:
+import { box } from "termkit-ui/layout";
+import { style } from "termkit-ui/styles";
+
+console.log(box(
+  \`\${style.cyan.bold("${cfg.title}")}\\n\${style.dim("${cfg.subtitle}")}\`,
+  { title: "${cfg.badge}", borderStyle: "rounded", borderColor: "cyan", padding: 1 }
+));`;
     }
   }
 ];

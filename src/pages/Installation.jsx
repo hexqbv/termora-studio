@@ -9,10 +9,10 @@ export function Installation({ onGoToPlayground }) {
   const [activePkgManager, setActivePkgManager] = useState('npm');
 
   const pkgCommands = {
-    npm: 'npm install termora',
-    pnpm: 'pnpm add termora',
-    yarn: 'yarn add termora',
-    bun: 'bun add termora'
+    npm: 'npm install termkit-ui',
+    pnpm: 'pnpm add termkit-ui',
+    yarn: 'yarn add termkit-ui',
+    bun: 'bun add termkit-ui'
   };
 
   const tabs = [
@@ -22,14 +22,19 @@ export function Installation({ onGoToPlayground }) {
     { id: 'bun', label: 'bun' }
   ];
 
-  const smokeTestCode = `// verify-termora.mjs
-import { select, colors } from "termora";
+  const smokeTestCode = `// verify-termkit.mjs
+import { select } from "termkit-ui/prompts";
+import { colors } from "termkit-ui/styles";
+import { box } from "termkit-ui/layout";
 
-console.log(colors.cyan.bold("Termora installation verified!"));
+console.log(box(
+  colors.green("✔ termkit-ui package successfully installed!"),
+  { title: "TERMKIT VERIFICATION", borderColor: "green", borderStyle: "rounded" }
+));
 
 const answer = await select({
   message: "Is your terminal ready for interactive apps?",
-  options: [
+  items: [
     { label: "Yes, ready to build", value: "yes" },
     { label: "Show me more components", value: "more" }
   ]
@@ -43,10 +48,10 @@ console.log(\`Received choice: \${answer}\`);`;
       <div className="max-w-2xl space-y-3">
         <Badge variant="cyan">GETTING STARTED</Badge>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          Install Termora
+          Install TermKit UI
         </h1>
         <p className="text-sm text-slate-400 leading-relaxed">
-          Add Termora to your Node.js command-line application using your favorite JavaScript package manager.
+          Add <code className="text-cyan-300 font-mono">termkit-ui</code> to your Node.js command-line application using your package manager of choice.
         </p>
       </div>
 
@@ -74,30 +79,30 @@ console.log(\`Received choice: \${answer}\`);`;
         <div className="p-5 rounded-xl bg-dark-900/60 border border-dark-800 space-y-2">
           <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm font-mono">
             <Cpu className="w-4 h-4" />
-            <span>Node.js &gt;= 18.0.0</span>
+            <span>Node.js &gt;= 22.0.0</span>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Requires Node.js 18 LTS or newer for native standard streams and modern asynchronous raw mode handling.
+            Requires Node.js 22 LTS or newer for native standard streams, modern asynchronous raw mode handling, and Intl.Segmenter width calculation.
           </p>
         </div>
 
         <div className="p-5 rounded-xl bg-dark-900/60 border border-dark-800 space-y-2">
           <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm font-mono">
             <Terminal className="w-4 h-4" />
-            <span>Cross-Platform TTY</span>
+            <span>Pure ES Modules</span>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Works out of the box on Linux, macOS (Terminal, iTerm2), and Windows (Windows Terminal, PowerShell, Git Bash).
+            Published as native ES Modules (<code className="text-slate-300">"type": "module"</code>) for optimal tree-shaking and zero dual-package hazard.
           </p>
         </div>
 
         <div className="p-5 rounded-xl bg-dark-900/60 border border-dark-800 space-y-2">
           <div className="flex items-center gap-2 text-amber-400 font-bold text-sm font-mono">
             <ShieldCheck className="w-4 h-4" />
-            <span>Zero Native C++ Addons</span>
+            <span>Zero Dependencies</span>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            No <code className="text-slate-300">node-gyp</code> or Python toolchain required during installation. Fast, reliable CI builds.
+            0 runtime dependencies. No <code className="text-slate-300">node-gyp</code> or Python toolchain required. Instant, hermetic installation in CI.
           </p>
         </div>
       </div>

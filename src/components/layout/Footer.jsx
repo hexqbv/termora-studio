@@ -15,11 +15,11 @@ export function Footer({ setActivePage }) {
               <span className="font-bold text-slate-200 text-base tracking-tight">TERMORA STUDIO</span>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Modern developer playground and documentation platform for Termora, the zero-bloat CLI toolkit for Node.js.
+              Interactive playground and documentation platform for <code className="text-slate-400">termkit-ui</code>, the zero-dependency CLI toolkit for Node.js.
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>MIT Licensed Open Source</span>
+              <span>MIT Licensed · Author: Sagar</span>
             </div>
           </div>
 
@@ -61,7 +61,7 @@ export function Footer({ setActivePage }) {
               </li>
               <li>
                 <button onClick={() => { setActivePage('docs'); window.scrollTo(0, 0); }} className="hover:text-cyan-400 transition-colors">
-                  Core Concepts (Raw TTY)
+                  Core Concepts (Virtual Screen)
                 </button>
               </li>
               <li>
@@ -71,7 +71,7 @@ export function Footer({ setActivePage }) {
               </li>
               <li>
                 <button onClick={() => { setActivePage('docs'); window.scrollTo(0, 0); }} className="hover:text-cyan-400 transition-colors">
-                  Real-World Recipes
+                  Headless Unit Testing
                 </button>
               </li>
             </ul>
@@ -81,28 +81,28 @@ export function Footer({ setActivePage }) {
           <div>
             <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono mb-3">Architecture</h4>
             <p className="text-xs text-slate-500 leading-relaxed mb-3">
-              Termora is engineered for pure standard Node.js TTY environments without native C++ compilation bindings.
+              TermKit UI is engineered for pure Node.js 22+ environments with zero runtime dependencies.
             </p>
             <div className="flex flex-col gap-1.5 text-[11px] font-mono text-slate-400">
               <span className="flex items-center gap-1.5">
                 <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                Pure JavaScript / Node 18+
+                Pure JavaScript / Node 22+
               </span>
               <span className="flex items-center gap-1.5">
                 <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                Zero unvetted runtime dependencies
+                Zero runtime dependencies
               </span>
               <span className="flex items-center gap-1.5">
                 <Code2 className="w-3.5 h-3.5 text-amber-400" />
-                Dual ESM & CommonJS support
+                Pure ES Modules ("type": "module")
               </span>
             </div>
           </div>
         </div>
 
         <div className="border-t border-dark-850 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Termora Studio. Designed for developer CLI excellence.</p>
-          <p className="mt-2 sm:mt-0 font-mono">Termora npm toolkit · Browser Playground Edition</p>
+          <p>© {new Date().getFullYear()} Termora Studio. Showcasing termkit-ui open source package.</p>
+          <p className="mt-2 sm:mt-0 font-mono">github.com/hexqbv/TermKit</p>
         </div>
       </div>
     </footer>
